@@ -1,0 +1,16 @@
+[package]
+name = "iota-ledger-signer-cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+iota-sdk.workspace = true
+iota-ledger.workspace = true
+iota-ledger-signer.workspace = true
+bip32 = "0.5.3"
+anyhow = "1.0.71"
+tokio = "=1.44.2"
+clap = "4.5.40"
+base64 = "0.22.1"
+bcs.workspace = true
+iota-types.workspace = true

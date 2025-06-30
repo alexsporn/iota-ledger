@@ -1,0 +1,17 @@
+[package]
+name = "ledger-transport-tcp"
+description = "Ledger Hardware Wallet - TCP Transport"
+version = "1.0.0"
+license = "Apache-2.0"
+authors = ["Zondax AG <hello@zondax.ch>"]
+edition = "2024"
+
+[dependencies]
+libc = "0.2"
+byteorder = "1.5"
+cfg-if = "1"
+thiserror = "1"
+hex = "0.4"
+log = "0.4"
+
+ledger-transport = "0.11.0"

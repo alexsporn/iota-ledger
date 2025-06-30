@@ -1,0 +1,15 @@
+[package]
+name = "iota-ledger-signer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+iota-sdk.workspace = true
+iota-types.workspace = true
+shared-crypto = { git = "https://github.com/iotaledger/iota", package = "shared-crypto" }
+bcs.workspace = true
+iota-ledger.workspace = true
+bip32 = "0.5.3"
+anyhow = "1.0.71"
+fastcrypto.workspace = true
+serde = "1.0.144"
