@@ -72,7 +72,7 @@ pub fn exec(
     path: &bip32::DerivationPath,
     transaction: Vec<u8>,
     objects: Vec<Vec<u8>>,
-) -> Result<SignatureBytes, errors::APIError> {
+) -> Result<SignatureBytes, errors::LedgerError> {
     let payloads = if objects.is_empty() {
         packable_vec![TransactionData { transaction }, PackedBIP32Path::from(path)]
     } else {

@@ -48,7 +48,7 @@ pub fn exec(
     transport: &Transport,
     bip32: &bip32::DerivationPath,
     show: bool,
-) -> Result<PublicKeyResult, errors::APIError> {
+) -> Result<PublicKeyResult, errors::LedgerError> {
     let payload: helpers::PackedBIP32Path = bip32.into();
     let ins = if show {
         APDUInstructions::VerifyAddress

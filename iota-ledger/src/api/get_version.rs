@@ -50,7 +50,7 @@ impl Packable for VersionRequest {
     }
 }
 
-pub fn exec(transport: &Transport) -> Result<Version, errors::APIError> {
+pub fn exec(transport: &Transport) -> Result<Version, errors::LedgerError> {
     helpers::send_with_blocks::<Version>(
         transport,
         constants::APDUInstructions::GetVersion,

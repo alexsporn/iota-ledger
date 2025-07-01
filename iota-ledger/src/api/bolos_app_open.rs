@@ -21,7 +21,7 @@ impl Packable for Request {
     }
 }
 
-pub fn exec(transport: &Transport, app: String) -> Result<(), errors::APIError> {
+pub fn exec(transport: &Transport, app: String) -> Result<(), errors::LedgerError> {
     let req = Request { app };
 
     let mut buf = Vec::new();

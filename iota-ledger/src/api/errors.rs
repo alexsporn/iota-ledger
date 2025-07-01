@@ -17,12 +17,12 @@ pub enum SyscallError {
 }
 
 #[derive(Error, Debug)]
-pub enum APIError {
+pub enum LedgerError {
     #[error("Unknown error")]
     Unknown,
 
-    #[error("Panic")]
-    Panic,
+    #[error("Device panic")]
+    DevicePanic,
 
     #[error("Device not found")]
     DeviceNotFound,
@@ -52,8 +52,8 @@ pub enum APIError {
     Timeout,
 }
 
-impl APIError {
-    /// Convert a raw error code to an APIError
+impl LedgerError {
+    /// Convert a raw error code to an LedgerError.
     ///
     /// This method first tries to match standard APDU error codes using APDUErrorCode::try_from().
     /// If that fails, it falls back to matching legacy/custom error codes that are specific to
@@ -62,21 +62,20 @@ impl APIError {
     /// Standard APDU errors (0x6xxx range) will be wrapped in APDUError(APDUErrorCode).
     /// Custom application errors (like 0x5515 for DeviceLocked, 0xe000 for Panic) are
     /// handled separately to maintain backward compatibility.
-    pub fn get_error(rc: u16) -> Option<APIError> {
+    pub fn get_error(rc: u16) -> Option<LedgerError> {
         // First try to match APDU error codes
         if let Ok(apdu_error) = APDUErrorCode::try_from(rc) {
             match apdu_error {
                 APDUErrorCode::NoError => return None, // No error, return None
-                _ => return Some(APIError::APDUError(apdu_error)),
+                _ => return Some(LedgerError::APDUError(apdu_error)),
             }
         }
 
         // Fall back to legacy error code matching for non-standard codes
         let e = match rc {
-            0xe000 => APIError::Panic,
-            0x5515 => APIError::DeviceLocked,
-            0x6d00 => APIError::Unknown,
-            rc if (0x6802..=0x680b).contains(&rc) => {
+            0xe000 => LedgerError::DevicePanic,
+            0x5515 => LedgerError::DeviceLocked,
+            rc if (0x6800..=0x680b).contains(&rc) => {
                 let value = (rc - 0x6800) as u8;
                 let syscall_error = match value {
                     2 => SyscallError::InvalidParameter,
@@ -90,9 +89,9 @@ impl APIError {
                     10 => SyscallError::Timeout,
                     _ => SyscallError::Unspecified,
                 };
-                APIError::Syscall(syscall_error)
+                LedgerError::Syscall(syscall_error)
             }
-            _ => APIError::Unknown,
+            _ => LedgerError::Unknown,
         };
         Some(e)
     }

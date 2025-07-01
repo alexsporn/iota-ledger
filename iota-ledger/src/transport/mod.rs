@@ -1,4 +1,4 @@
-use crate::APIError;
+use crate::LedgerError;
 use ledger_transport::{APDUAnswer, APDUCommand};
 use ledger_transport_hid::{LedgerHIDError, TransportNativeHID};
 use ledger_transport_tcp::{Callback, TransportTCP};
@@ -45,7 +45,7 @@ impl LedgerTransport {
     pub(crate) fn exchange(
         &self,
         apdu_command: &APDUCommand<Vec<u8>>,
-    ) -> Result<APDUAnswer<Vec<u8>>, APIError> {
+    ) -> Result<APDUAnswer<Vec<u8>>, LedgerError> {
         debug!(
             "Exchanging APDU command: {}",
             apdu_command.serialize().encode_hex::<String>()
@@ -53,15 +53,15 @@ impl LedgerTransport {
         match self {
             LedgerTransport::TCP(t) => t
                 .exchange(apdu_command)
-                .map_err(|_| APIError::TransportError),
+                .map_err(|_| LedgerError::TransportError),
             LedgerTransport::NativeHID(h) => h
                 .exchange(apdu_command)
-                .map_err(|_| APIError::TransportError),
+                .map_err(|_| LedgerError::TransportError),
         }
     }
 }
 
-fn try_get_lock(timeout: Duration) -> Result<MutexGuard<'static, i32>, APIError> {
+fn try_get_lock(timeout: Duration) -> Result<MutexGuard<'static, i32>, LedgerError> {
     let start_time = Instant::now();
     while start_time.elapsed() < timeout {
         match TRANSPORT_MUTEX.try_lock() {
@@ -74,14 +74,14 @@ fn try_get_lock(timeout: Duration) -> Result<MutexGuard<'static, i32>, APIError>
         }
         std::thread::sleep(Duration::from_secs(1));
     }
-    Err(APIError::Timeout)
+    Err(LedgerError::Timeout)
 }
 
 // only create transport without IOTA specific calls
 pub fn create_transport(
     transport_type: TransportTypes,
     callback: Option<Callback>,
-) -> Result<Transport, APIError> {
+) -> Result<Transport, LedgerError> {
     debug!("transport_mutex try lock");
     let transport_mutex = try_get_lock(Duration::from_secs(30))?;
     debug!("transport_mutex locked");
@@ -91,13 +91,13 @@ pub fn create_transport(
             transport: LedgerTransport::TCP(TransportTCP::new("127.0.0.1", 9999, callback)),
         },
         TransportTypes::NativeHID => {
-            let api = hidapi::HidApi::new().map_err(|_| APIError::TransportError)?;
+            let api = hidapi::HidApi::new().map_err(|_| LedgerError::TransportError)?;
             Transport {
                 _transport_mutex: transport_mutex,
                 transport: LedgerTransport::NativeHID(TransportNativeHID::new(&api).map_err(
                     |e| match e {
-                        LedgerHIDError::DeviceNotFound => APIError::DeviceNotFound,
-                        _ => APIError::TransportError,
+                        LedgerHIDError::DeviceNotFound => LedgerError::DeviceNotFound,
+                        _ => LedgerError::TransportError,
                     },
                 )?),
             }

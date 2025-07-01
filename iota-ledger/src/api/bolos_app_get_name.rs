@@ -42,7 +42,7 @@ impl Unpackable for Response {
     }
 }
 
-pub fn exec(transport: &Transport) -> Result<Response, errors::APIError> {
+pub fn exec(transport: &Transport) -> Result<Response, errors::LedgerError> {
     let cmd = APDUCommand {
         cla: constants::APDU_BOLOS_CLA_B0,
         ins: constants::APDUInstructionsBolos::GetAppVersionB0 as u8,

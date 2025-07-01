@@ -90,7 +90,7 @@ struct BlockResponse {
 }
 
 impl BlockResponse {
-    fn chunk_hash(&self) -> Result<Digest<32>, errors::APIError> {
+    fn chunk_hash(&self) -> Result<Digest<32>, errors::LedgerError> {
         match self.instruction {
             LedgerToHost::GetChunk => {
                 if self.payload.len() >= 32 {
@@ -98,10 +98,10 @@ impl BlockResponse {
                     hash.copy_from_slice(&self.payload[..32]);
                     return Ok(Digest::<32>::new(hash));
                 }
-                Err(errors::APIError::BlocksProtocolFailed)
+                Err(errors::LedgerError::BlocksProtocolFailed)
             }
             LedgerToHost::PutChunk => Ok(Sha256::digest(&self.payload)),
-            _ => Err(errors::APIError::BlocksProtocolFailed),
+            _ => Err(errors::LedgerError::BlocksProtocolFailed),
         }
     }
 }
@@ -125,7 +125,7 @@ pub(crate) fn send_with_blocks<R: Unpackable>(
     ins: constants::APDUInstructions,
     payloads: Vec<Box<dyn PackableObject>>,
     extra_data: Option<HashMap<Digest<32>, Vec<u8>>>,
-) -> Result<R, errors::APIError> {
+) -> Result<R, errors::LedgerError> {
     const CHUNK_SIZE: usize = 180;
 
     let mut data = extra_data.unwrap_or_default();
@@ -134,7 +134,7 @@ pub(crate) fn send_with_blocks<R: Unpackable>(
     for payload in payloads {
         let packed = payload
             .pack_as_vec()
-            .map_err(|_| errors::APIError::Packing)?;
+            .map_err(|_| errors::LedgerError::Packing)?;
         let chunks: Vec<&[u8]> = packed.chunks(CHUNK_SIZE).collect();
 
         let mut last_hash: Digest<32> = Digest::<32>::new([0u8; 32]);
@@ -163,7 +163,7 @@ fn handle_blocks_protocol<T: Unpackable>(
     ins: constants::APDUInstructions,
     mut payload: Vec<u8>,
     mut data: HashMap<Digest<32>, Vec<u8>>,
-) -> Result<T, errors::APIError> {
+) -> Result<T, errors::LedgerError> {
     let mut result = Vec::new();
     let ins = ins as u8;
 
@@ -204,23 +204,23 @@ fn handle_blocks_protocol<T: Unpackable>(
         }
     }
 
-    let res = T::unpack(&mut &result[..]).map_err(|_| errors::APIError::Unpacking)?;
+    let res = T::unpack(&mut &result[..]).map_err(|_| errors::LedgerError::Unpacking)?;
     Ok(res)
 }
 
 pub(crate) fn exec<T: Unpackable>(
     transport: &Transport,
     cmd: APDUCommand<Vec<u8>>,
-) -> Result<T, errors::APIError> {
+) -> Result<T, errors::LedgerError> {
     transport
         .transport
         .exchange(&cmd)
         .and_then(|resp| {
-            let api_error = errors::APIError::get_error(resp.retcode());
+            let api_error = errors::LedgerError::get_error(resp.retcode());
             match api_error {
                 None => {
                     let res = T::unpack(&mut &resp.data()[..])
-                        .map_err(|_| errors::APIError::Unpacking)?;
+                        .map_err(|_| errors::LedgerError::Unpacking)?;
                     Ok(res)
                 }
                 Some(e) => Err(e),
