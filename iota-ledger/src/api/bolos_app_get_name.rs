@@ -30,18 +30,7 @@ impl Unpackable for Response {
         // format always 0x01 but don't insist on it
         let _format_id = u8::unpack(buf)?;
 
-        let mut app = String::unpack(buf)?;
-
-        // nanox sdk bug
-        // https://github.com/LedgerHQ/nanox-secure-sdk/issues/6
-        // reported as OLOS\0
-        if app.chars().count() == 5 && app.as_bytes() == [0x4f, 0x4c, 0x4f, 0x53, 0x00] {
-            // unquirk dashboard name
-            app = String::from("BOLOS");
-        }
-
-        // version is corrupted on nanox sdk - but we don't need it anyway
-        // the reported length is ok
+        let app = String::unpack(buf)?;
         let version = String::unpack(buf)?;
 
         // consume all extra bytes (nano x <-> nano s compatibility!)
