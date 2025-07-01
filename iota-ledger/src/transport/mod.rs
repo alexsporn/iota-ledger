@@ -1,6 +1,6 @@
 use crate::APIError;
 use ledger_transport::{APDUAnswer, APDUCommand};
-use ledger_transport_hid::TransportNativeHID;
+use ledger_transport_hid::{LedgerHIDError, TransportNativeHID};
 use ledger_transport_tcp::{Callback, TransportTCP};
 
 use hex::ToHex;
@@ -94,9 +94,12 @@ pub fn create_transport(
             let api = hidapi::HidApi::new().map_err(|_| APIError::TransportError)?;
             Transport {
                 _transport_mutex: transport_mutex,
-                transport: LedgerTransport::NativeHID(
-                    TransportNativeHID::new(&api).map_err(|_| APIError::TransportError)?,
-                ),
+                transport: LedgerTransport::NativeHID(TransportNativeHID::new(&api).map_err(
+                    |e| match e {
+                        LedgerHIDError::DeviceNotFound => APIError::DeviceNotFound,
+                        _ => APIError::TransportError,
+                    },
+                )?),
             }
         }
     };

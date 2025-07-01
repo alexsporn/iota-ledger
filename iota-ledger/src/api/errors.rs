@@ -24,6 +24,9 @@ pub enum APIError {
     #[error("Panic")]
     Panic,
 
+    #[error("Device not found")]
+    DeviceNotFound,
+
     #[error("Device locked")]
     DeviceLocked,
 
