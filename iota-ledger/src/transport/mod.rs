@@ -1,15 +1,16 @@
-use crate::LedgerError;
-use ledger_transport::{APDUAnswer, APDUCommand};
-use ledger_transport_hid::{LedgerHIDError, TransportNativeHID};
-use ledger_transport_tcp::{Callback, TransportTCP};
+use std::{
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
 
 use hex::ToHex;
 use lazy_static::lazy_static;
-use std::sync::{Arc, Mutex};
-
-use std::time::{Duration, Instant};
-
+use ledger_transport::{APDUAnswer, APDUCommand};
+use ledger_transport_hid::{LedgerHIDError, TransportNativeHID};
+use ledger_transport_tcp::{Callback, TransportTCP};
 use log::debug;
+
+use crate::LedgerError;
 
 lazy_static! {
     static ref TRANSPORT_MUTEX: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));

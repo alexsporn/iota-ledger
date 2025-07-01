@@ -21,6 +21,10 @@ async-trait = "0.1.88"
 ledger-transport = "0.11.0"
 ledger-transport-hid = "0.11.0"
 ledger-transport-tcp.workspace = true
+bcs.workspace = true
+iota-types = { git = "https://github.com/iotaledger/iota", package = "iota-types" }
+shared-crypto.workspace = true
+serde.workspace = true
 
 [dev-dependencies]
 clap = "4.5.40"

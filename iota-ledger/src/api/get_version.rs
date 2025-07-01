@@ -1,8 +1,12 @@
-use crate::Transport;
-
-use crate::api::packable::{Error as PackableError, Packable, Read, Unpackable, Write};
-use crate::api::{constants, errors, helpers};
 use core::fmt;
+
+use crate::{
+    Transport,
+    api::{
+        constants, errors, helpers,
+        packable::{Error as PackableError, Packable, Read, Unpackable, Write},
+    },
+};
 
 #[derive(Debug)]
 pub struct Version {

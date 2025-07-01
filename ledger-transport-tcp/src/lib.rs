@@ -1,7 +1,9 @@
-use ledger_transport::{APDUAnswer, APDUCommand};
+use std::{
+    io::{Read, Write},
+    net::TcpStream,
+};
 
-use std::io::{Read, Write};
-use std::net::TcpStream;
+use ledger_transport::{APDUAnswer, APDUCommand};
 
 mod errors;
 pub use errors::LedgerTCPError;

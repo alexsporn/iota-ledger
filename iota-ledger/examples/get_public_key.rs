@@ -1,7 +1,6 @@
-use clap::{Arg, Command};
-use std::str::FromStr;
+use std::{error::Error, str::FromStr};
 
-use std::error::Error;
+use clap::{Arg, Command};
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let matches = Command::new("iota-ledger-cli")

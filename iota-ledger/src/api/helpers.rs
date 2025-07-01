@@ -1,14 +1,16 @@
-use crate::Transport;
-use ledger_transport::APDUCommand;
-
-use crate::api::constants;
-use crate::api::errors::{self};
-use crate::api::packable::{
-    Error as PackableError, Packable, PackableObject, Read, Unpackable, Write,
-};
+use std::collections::HashMap;
 
 use fastcrypto::hash::{Digest, HashFunction, Sha256};
-use std::collections::HashMap;
+use ledger_transport::APDUCommand;
+
+use crate::{
+    Transport,
+    api::{
+        constants,
+        errors::{self},
+        packable::{Error as PackableError, Packable, PackableObject, Read, Unpackable, Write},
+    },
+};
 
 /// Macro to create a vector of boxed packable objects
 /// Usage: packable_vec![payload1, payload2, payload3]
@@ -134,7 +136,7 @@ pub(crate) fn send_with_blocks<R: Unpackable>(
     for payload in payloads {
         let packed = payload
             .pack_as_vec()
-            .map_err(|_| errors::LedgerError::Packing)?;
+            .map_err(|_| errors::LedgerError::Serialization)?;
         let chunks: Vec<&[u8]> = packed.chunks(CHUNK_SIZE).collect();
 
         let mut last_hash: Digest<32> = Digest::<32>::new([0u8; 32]);
@@ -204,7 +206,7 @@ fn handle_blocks_protocol<T: Unpackable>(
         }
     }
 
-    let res = T::unpack(&mut &result[..]).map_err(|_| errors::LedgerError::Unpacking)?;
+    let res = T::unpack(&mut &result[..]).map_err(|_| errors::LedgerError::Serialization)?;
     Ok(res)
 }
 
@@ -220,7 +222,7 @@ pub(crate) fn exec<T: Unpackable>(
             match api_error {
                 None => {
                     let res = T::unpack(&mut &resp.data()[..])
-                        .map_err(|_| errors::LedgerError::Unpacking)?;
+                        .map_err(|_| errors::LedgerError::Serialization)?;
                     Ok(res)
                 }
                 Some(e) => Err(e),

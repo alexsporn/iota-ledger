@@ -3,19 +3,22 @@
 use std::vec;
 
 use log::debug;
+pub use transport::{LedgerTransport, Transport, TransportTypes, create_transport};
 
-pub use ledger_transport::{APDUAnswer, APDUCommand, APDUErrorCode};
-
-use crate::api::errors::LedgerError;
-use crate::api::get_public_key;
-use crate::api::get_version::Version;
-use crate::api::sign_transaction::SignatureBytes;
-
-use crate::api::get_public_key::PublicKeyResult;
+pub use crate::api::errors::LedgerError;
+use crate::api::{
+    get_public_key, get_public_key::PublicKeyResult, get_version::Version, sign_transaction,
+};
 pub mod api;
 
 pub mod transport;
-pub use transport::{LedgerTransport, Transport, TransportTypes, create_transport};
+use iota_types::{
+    base_types::IotaAddress,
+    crypto::{Ed25519IotaSignature, SignatureScheme, ToFromBytes},
+    object::Object,
+};
+use serde::Serialize;
+use shared_crypto::intent::IntentMessage;
 
 /// Get Ledger by transport_type
 pub fn get_ledger_by_type(
@@ -27,6 +30,12 @@ pub fn get_ledger_by_type(
 
 pub struct LedgerHardwareWallet {
     transport: Transport,
+}
+
+pub struct SignedTransaction<T> {
+    pub intent_msg: IntentMessage<T>,
+    pub signature: Ed25519IotaSignature,
+    pub address: IotaAddress,
 }
 
 impl LedgerHardwareWallet {
@@ -71,29 +80,53 @@ impl LedgerHardwareWallet {
     pub fn verify_address(
         &self,
         bip32: &bip32::DerivationPath,
-    ) -> Result<PublicKeyResult, api::errors::LedgerError> {
+    ) -> Result<PublicKeyResult, LedgerError> {
         get_public_key::exec(&self.transport, bip32, true)
     }
 
     pub fn get_public_key(
         &self,
         bip32: &bip32::DerivationPath,
-    ) -> Result<PublicKeyResult, api::errors::LedgerError> {
+    ) -> Result<PublicKeyResult, LedgerError> {
         get_public_key::exec(&self.transport, bip32, false)
     }
 
-    pub fn sign_transaction(
+    pub fn get_signature_scheme(&self) -> SignatureScheme {
+        SignatureScheme::ED25519
+    }
+
+    pub fn sign_intent<T: Serialize>(
         &self,
         bip32: &bip32::DerivationPath,
-        transaction: Vec<u8>,
-        objects: Vec<Vec<u8>>,
-    ) -> Result<SignatureBytes, api::errors::LedgerError> {
+        intent_msg: IntentMessage<T>,
+        objects: Vec<Object>,
+    ) -> Result<SignedTransaction<T>, LedgerError> {
         let version = self.get_version()?;
-        if version.major > 0 {
+        let public_key = self.get_public_key(bip32)?;
+        let intent_bytes = bcs::to_bytes(&intent_msg).map_err(|_| LedgerError::Serialization)?;
+
+        let signature = (if version.major > 0 {
+            let bcs_objects: Vec<Vec<u8>> = objects
+                .iter()
+                .map(|o| bcs::to_bytes(&o).map_err(|_| LedgerError::Serialization))
+                .collect::<Result<_, _>>()?;
             // If the major version is greater than 0, we assume it supports clear signing
-            api::sign_transaction::exec(self.transport(), bip32, transaction, objects)
+            sign_transaction::exec(self.transport(), bip32, intent_bytes, bcs_objects)
         } else {
-            api::sign_transaction::exec(self.transport(), bip32, transaction, vec![])
-        }
+            sign_transaction::exec(self.transport(), bip32, intent_bytes, vec![])
+        })?;
+
+        let mut signature_bytes: Vec<u8> = Vec::new();
+        signature_bytes.extend_from_slice(&[self.get_signature_scheme().flag()]);
+        signature_bytes.extend_from_slice(&signature.bytes);
+        signature_bytes.extend_from_slice(public_key.public_key.as_ref());
+
+        Ok(SignedTransaction {
+            intent_msg,
+            signature: Ed25519IotaSignature::from_bytes(&signature_bytes)
+                .map_err(|_| LedgerError::Serialization)?,
+            address: IotaAddress::from_bytes(public_key.address)
+                .map_err(|_| LedgerError::Serialization)?,
+        })
     }
 }

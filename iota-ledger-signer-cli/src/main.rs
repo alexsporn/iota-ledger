@@ -1,7 +1,13 @@
-use clap::{Arg, Command};
-use iota_sdk::{IotaClientBuilder, types::transaction::TransactionData};
-use iota_types::crypto::{EncodeDecodeBase64, IotaSignature};
 use std::str::FromStr;
+
+use clap::{Arg, Command};
+use iota_sdk::{
+    IotaClientBuilder,
+    types::{
+        crypto::{EncodeDecodeBase64, IotaSignature},
+        transaction::TransactionData,
+    },
+};
 
 fn transaction_from_base64(b64: &str) -> Result<TransactionData, anyhow::Error> {
     let bytes = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, b64)?;

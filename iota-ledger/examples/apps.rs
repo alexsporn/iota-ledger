@@ -1,7 +1,6 @@
-use clap::{Arg, Command};
-use std::{thread, time};
+use std::{error::Error, thread, time};
 
-use std::error::Error;
+use clap::{Arg, Command};
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let matches = Command::new("ledger iota tester")

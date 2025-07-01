@@ -1,7 +1,9 @@
-use crate::Transport;
 use ledger_transport::APDUCommand;
 
-use crate::api::{constants, errors, helpers};
+use crate::{
+    Transport,
+    api::{constants, errors, helpers},
+};
 
 pub fn exec(transport: &Transport) -> Result<(), errors::LedgerError> {
     let cmd = APDUCommand {

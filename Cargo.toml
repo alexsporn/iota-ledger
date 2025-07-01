@@ -13,5 +13,6 @@ iota-ledger-signer = { path = "iota-ledger-signer" }
 ledger-transport-tcp = { path = "ledger-transport-tcp" }
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "2f502fd8570fe4e9cff36eea5bbd6fef22002898" }
 iota-sdk = { git = "https://github.com/iotaledger/iota", package = "iota-sdk" }
-iota-types = { git = "https://github.com/iotaledger/iota", package = "iota-types" }
+shared-crypto = { git = "https://github.com/iotaledger/iota", package = "shared-crypto" }
 bcs = "0.1.6"
+serde = "1.0.144"

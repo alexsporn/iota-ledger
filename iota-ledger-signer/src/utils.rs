@@ -1,15 +1,19 @@
 use std::collections::HashSet;
 
-use iota_sdk::IotaClient;
-use iota_sdk::rpc_types::{IotaObjectData, IotaObjectDataOptions, IotaObjectResponse};
-use iota_sdk::types::base_types::{ObjectID, ObjectType};
-use iota_sdk::types::object::{MoveObject, Object};
-use iota_types::transaction::{InputObjectKind, TransactionData, TransactionDataAPI};
+use iota_sdk::{
+    IotaClient,
+    rpc_types::{IotaObjectData, IotaObjectDataOptions, IotaObjectResponse},
+    types::{
+        base_types::{ObjectID, ObjectType},
+        object::{MoveObject, Object},
+        transaction::{InputObjectKind, TransactionData, TransactionDataAPI},
+    },
+};
 
 pub(crate) async fn load_objects_with_client(
     client: &IotaClient,
     transaction: &TransactionData,
-) -> Result<Vec<Vec<u8>>, anyhow::Error> {
+) -> Result<Vec<Object>, anyhow::Error> {
     let object_ids = object_ids_from_transaction(transaction)?;
 
     if object_ids.is_empty() {
@@ -26,12 +30,7 @@ pub(crate) async fn load_objects_with_client(
         .map(|resp| object_from(resp.clone()))
         .collect();
 
-    let bcs_objects: Vec<Vec<u8>> = objects
-        .iter()
-        .map(|o| bcs::to_bytes(&o).map_err(anyhow::Error::from))
-        .collect::<Result<_, _>>()?;
-
-    Ok(bcs_objects)
+    Ok(objects)
 }
 
 fn object_ids_from_transaction(

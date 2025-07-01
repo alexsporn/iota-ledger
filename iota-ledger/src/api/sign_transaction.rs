@@ -1,10 +1,12 @@
-use crate::Transport;
-use crate::api::helpers::PackedBIP32Path;
-
-use crate::api::packable::{Error as PackableError, Packable, Read, Unpackable, Write};
-
-use crate::api::{constants, errors, helpers};
-use crate::packable_vec;
+use crate::{
+    Transport,
+    api::{
+        constants, errors, helpers,
+        helpers::PackedBIP32Path,
+        packable::{Error as PackableError, Packable, Read, Unpackable, Write},
+    },
+    packable_vec,
+};
 
 #[derive(Debug)]
 pub struct SignatureBytes {

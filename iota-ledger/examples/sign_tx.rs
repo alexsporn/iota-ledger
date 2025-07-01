@@ -1,7 +1,20 @@
-use clap::{Arg, Command};
-use std::str::FromStr;
+use std::{error::Error, str::FromStr};
 
-use std::error::Error;
+use clap::{Arg, Command};
+use iota_types::{crypto::EncodeDecodeBase64, object::Object, transaction::TransactionData};
+use shared_crypto::intent::IntentMessage;
+
+fn intent_from_base64(b64: &str) -> IntentMessage<TransactionData> {
+    let bytes = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, b64)
+        .expect("Invalid base64 in intent");
+    bcs::from_bytes(&bytes).expect("Invalid bcs in intent")
+}
+
+fn object_from_base64(b64: &str) -> Object {
+    let bytes = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, b64)
+        .expect("Invalid base64 in object");
+    bcs::from_bytes(&bytes).expect("Invalid bcs in object")
+}
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let matches = Command::new("iota-ledger-cli")
@@ -48,15 +61,9 @@ pub fn main() -> Result<(), Box<dyn Error>> {
             .unwrap_or("m/44'/4218'/0'/0'/0'"),
     )?;
 
-    let objects: Vec<Vec<u8>> = matches
+    let objects: Vec<Object> = matches
         .get_many::<String>("objects")
-        .map(|objs| {
-            objs.map(|s| {
-                base64::Engine::decode(&base64::engine::general_purpose::STANDARD, s)
-                    .expect("Invalid base64 in objects")
-            })
-            .collect()
-        })
+        .map(|objs| objs.map(|o| object_from_base64(o)).collect())
         .unwrap_or_default();
 
     let transport_type = if is_simulator {
@@ -65,20 +72,16 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         iota_ledger::TransportTypes::NativeHID
     };
 
-    let transaction = base64::Engine::decode(
-        &base64::engine::general_purpose::STANDARD,
+    let transaction = intent_from_base64(
         matches
             .get_one::<String>("transaction")
             .expect("Transaction bytes are required"),
-    )?;
+    );
 
     let ledger = iota_ledger::get_ledger_by_type(transport_type)?;
 
-    let signature = ledger.sign_transaction(&derivation_path, transaction, objects)?;
-    println!(
-        "Signature: {}",
-        base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &signature.bytes)
-    );
+    let signature = ledger.sign_intent(&derivation_path, transaction, objects)?;
+    println!("Signature: {}", &signature.signature.encode_base64());
 
     Ok(())
 }

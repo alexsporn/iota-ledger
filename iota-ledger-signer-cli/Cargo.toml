@@ -13,4 +13,3 @@ tokio = "=1.44.2"
 clap = "4.5.40"
 base64 = "0.22.1"
 bcs.workspace = true
-iota-types.workspace = true

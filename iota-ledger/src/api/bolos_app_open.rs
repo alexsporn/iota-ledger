@@ -1,9 +1,12 @@
-use crate::api::packable::{Error as PackableError, Packable, Write};
-
-use crate::Transport;
 use ledger_transport::APDUCommand;
 
-use crate::api::{constants, errors, helpers};
+use crate::{
+    Transport,
+    api::{
+        constants, errors, helpers,
+        packable::{Error as PackableError, Packable, Write},
+    },
+};
 
 #[derive(Debug)]
 pub struct Request {

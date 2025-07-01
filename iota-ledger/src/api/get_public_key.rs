@@ -1,15 +1,17 @@
-use crate::api::packable::{Error as PackableError, Read, Unpackable};
-
-use crate::Transport;
-
-use crate::api::constants::APDUInstructions;
-use crate::api::{errors, helpers};
-use crate::packable_vec;
-
 use fastcrypto::{
     ed25519::{ED25519_PUBLIC_KEY_LENGTH, Ed25519PublicKey},
     hash::Digest,
     traits::ToFromBytes,
+};
+
+use crate::{
+    Transport,
+    api::{
+        constants::APDUInstructions,
+        errors, helpers,
+        packable::{Error as PackableError, Read, Unpackable},
+    },
+    packable_vec,
 };
 
 pub struct PublicKeyResult {

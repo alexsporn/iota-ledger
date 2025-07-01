@@ -1,20 +1,21 @@
-use crate::api::packable::{Error as PackableError, Read, Unpackable};
-
-use crate::Transport;
 use ledger_transport::APDUCommand;
 
-use crate::api::{constants, errors, helpers};
-/*
-dashboard:
-HID => b001000000
-HID <= 0105|424f4c4f53|05|322e302e30|9000
-            B O L O S      2 . 0 . 0
-
-"IOTA"
-HID => b001000000
-HID <= 0104|494f5441|05|302e372e30|0102|9000
-            I O T A      0 . 7 . 0
-*/
+use crate::{
+    Transport,
+    api::{
+        constants, errors, helpers,
+        packable::{Error as PackableError, Read, Unpackable},
+    },
+};
+// dashboard:
+// HID => b001000000
+// HID <= 0105|424f4c4f53|05|322e302e30|9000
+// B O L O S      2 . 0 . 0
+//
+// "IOTA"
+// HID => b001000000
+// HID <= 0104|494f5441|05|302e372e30|0102|9000
+// I O T A      0 . 7 . 0
 
 #[derive(Debug)]
 pub struct Response {
