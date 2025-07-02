@@ -32,7 +32,7 @@ impl IotaLedgerSigner {
 
     pub fn get_address(&self) -> Result<IotaAddress, anyhow::Error> {
         let public_key = self.ledger.get_public_key(&self.path)?;
-        Ok(IotaAddress::from_bytes(public_key.address)?)
+        Ok(public_key.address)
     }
 
     pub fn get_public_key(&self) -> Result<Ed25519PublicKey, anyhow::Error> {

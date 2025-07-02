@@ -1,8 +1,8 @@
 use fastcrypto::{
     ed25519::{ED25519_PUBLIC_KEY_LENGTH, Ed25519PublicKey},
-    hash::Digest,
     traits::ToFromBytes,
 };
+use iota_types::base_types::IotaAddress;
 
 use crate::{
     Transport,
@@ -16,7 +16,7 @@ use crate::{
 
 pub struct PublicKeyResult {
     pub public_key: Ed25519PublicKey,
-    pub address: Digest<32>,
+    pub address: IotaAddress,
 }
 
 impl Unpackable for PublicKeyResult {
@@ -37,7 +37,8 @@ impl Unpackable for PublicKeyResult {
         }
         let mut address_buffer = [0_u8; 32];
         buf.read_exact(&mut address_buffer)?;
-        let address = Digest::<32>::new(address_buffer);
+        let address =
+            IotaAddress::from_bytes(address_buffer).map_err(|_| PackableError::InvalidData)?;
 
         Ok(Self {
             public_key,
